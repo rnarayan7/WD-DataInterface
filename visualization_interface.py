@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib as plt
 import wx
 import os
+import csv
 
 # Main window class
 class MainWindow(wx.Frame):
@@ -46,7 +47,15 @@ class MainWindow(wx.Frame):
             print "You chose the following file(s):"
             for path in paths:
                 print path
+            self.readInData(filePath = dlg.GetPath())
         dlg.Destroy()
+
+    def readInData(self, filePath):
+        print "reached" #DELETE
+        if(filePath[:-5] == ".xlsx"):
+            data = pd.read_excel(filePath)
+        elif(filePath[:-4] == ".csv"):
+            data = pd.read_csv(filePath)
 
 # Initialize main
 if __name__ == '__main__':
