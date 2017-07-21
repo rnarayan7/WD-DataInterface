@@ -3,6 +3,7 @@ import matplotlib as plt
 import wx
 import os
 import csv
+from reader import readInitialCSVFile
 
 # Main window class
 class MainWindow(wx.Frame):
@@ -12,6 +13,7 @@ class MainWindow(wx.Frame):
         self.InitUI()
         self.Centre()
         self.Show()
+        self.master = {}
 
     # Initialize the UI
     def InitUI(self):
@@ -38,7 +40,7 @@ class MainWindow(wx.Frame):
             self, message = "Choose a file",
             defaultDir = os.getcwd(),
             defaultFile = "",
-            wildcard = "CSV files (*.csv)|*.csv|Excel files (*.xlsx)|*.xlsx",
+            wildcard = "CSV files (*.csv)|*.csv",
             style = wx.FD_OPEN | wx.FD_CHANGE_DIR
             )
         # Show the selected files
@@ -51,11 +53,10 @@ class MainWindow(wx.Frame):
         dlg.Destroy()
 
     def readInData(self, filePath):
-        print "reached" #DELETE
-        if(filePath[:-5] == ".xlsx"):
-            data = pd.read_excel(filePath)
-        elif(filePath[:-4] == ".csv"):
-            data = pd.read_csv(filePath)
+        if(filePath[-4:] == ".csv"):
+            self.master = readCSVFile(filePath)
+        else:
+            raise ValueError("wrong file type inputted")
 
 # Initialize main
 if __name__ == '__main__':
