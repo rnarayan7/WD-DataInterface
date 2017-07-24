@@ -2,8 +2,8 @@ import pandas as pd
 import matplotlib as plt
 import wx
 import os
-import csv
 from reader import readInitialCSVFile
+from reader import readInHEAD
 
 # Main window class
 class MainWindow(wx.Frame):
@@ -14,24 +14,33 @@ class MainWindow(wx.Frame):
         self.Centre()
         self.Show()
         self.master = {}
+        #self.currentID
+        #self.currentFilePath
+        #self.listBox
 
     # Initialize the UI
     def InitUI(self):
         panel = wx.Panel(self)
-        vbox = wx.BoxSizer(wx.HORIZONTAL)
+        mainBox = wx.BoxSizer(wx.HORIZONTAL)
+        leftBox = wx.BoxSizer(wx.VERTICAL)
         # Initialize panels
         bottomPanel = wx.Panel(parent = panel, style = wx.DOUBLE_BORDER)
         rightPanel = wx.Panel(parent = panel, style = wx.DOUBLE_BORDER)
         leftPanel = wx.Panel(parent = panel, style = wx.DOUBLE_BORDER)
-        # Add panels to BoxSizer
-        vbox.Add(rightPanel, proportion = 1, flag = wx.EXPAND | wx.RIGHT | wx.ALIGN_CENTER, border = 20)
-        vbox.Add(bottomPanel, proportion = 1, flag = wx.EXPAND | wx.BOTTOM | wx.ALIGN_CENTER, border = 20)
-        vbox.Add(leftPanel, proportion = 1, flag = wx.EXPAND | wx.LEFT | wx.ALIGN_CENTER, border = 20)
-        panel.SetSizer(vbox)
-        # Add FileDialog button
-        openFileDlgBtn = wx.Button(panel, label = "Select a data file")
+        # Add components to Main Window BoxSizer
+        mainBox.Add(leftPanel, proportion = 1, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.LEFT, border = 20)
+        mainBox.Add(bottomPanel, proportion = 1, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.BOTTOM, border = 20)
+        mainBox.Add(rightPanel, proportion = 1, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.RIGHT, border = 20)
+        panel.SetSizer(mainBox)
+        # Create FileDialog button
+        openFileDlgBtn = wx.Button(parent = leftPanel, label = "Select a data file")
         openFileDlgBtn.Bind(wx.EVT_BUTTON, self.onOpenFile)
-        # Add HEAD numbers in left panel
+        # Create ListBox for HEAD numbers
+        self.listBox = wx.ListBox(parent = leftPanel, choices = [], style = wx.LB_SINGLE | wx.LB_ALWAYS_SB)
+         # Add panels to Left Window BoxSizerBHORA
+        leftBox.Add(openFileDlgBtn, proportion = 0, flag = wx.ALIGN_CENTER | wx.TOP, border = 10)
+        leftBox.Add(self.listBox, proportion = 1, flag = wx.EXPAND | wx.ALIGN_LEFT | wx.TOP, border = 10)
+        leftPanel.SetSizer(leftBox)
 
     # Event handler for FileDialog button
     def onOpenFile(self, event):
@@ -52,11 +61,23 @@ class MainWindow(wx.Frame):
             self.readInData(filePath = dlg.GetPath())
         dlg.Destroy()
 
+    # Checks if file is valid and calls necessary read function
     def readInData(self, filePath):
         if(filePath[-4:] == ".csv"):
-            self.master = readCSVFile(filePath)
+            self.master = readInitialCSVFile(filePath)
+            self.currentFilePath = filePath
+            keys = self.master.keys()
+            keys.sort()
+            self.listBox.InsertItems(map(str, keys),0)
         else:
-            raise ValueError("wrong file type inputted")
+            raise ValueError("wrong file type selected")
+    
+    # Reads in HEAD data based on selection by user
+    def readInHEAD(self, id):
+        self.currentID = id
+        lineNum = self.master[self.currentID].line_num
+        headings = self.master[self.currentID].headings
+        self.master[self.currentID].data = readInHEAD(self.currentFilePath, headings, lineNum)
 
 # Initialize main
 if __name__ == '__main__':
