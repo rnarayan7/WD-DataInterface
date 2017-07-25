@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 import csv
 
 class HEAD(object):
@@ -6,14 +7,11 @@ class HEAD(object):
         self.head_description = pd.DataFrame(data = [description], columns = headings_1)
         self.data_headings = headings_2
         self.id = int(self.head_description["Head Stack S/N"][0])
+        self.serial_num = ""
         self.line_num = line_num
-        self.data = {}
-    def Add_row(self,row):
-        self.head_data = self.head_data.append(pd.DataFrame([row],columns = self.data_headings),
-                                               ignore_index = True)
+        self.data = None
     def DeleteData(self):
-        self.data = {}
-        
+        self.data = None
 
 def ReadInitialCSVFile(file_path):
     master = dict()
@@ -27,6 +25,7 @@ def ReadInitialCSVFile(file_path):
             headings_2 = next(reader)
             new_head = HEAD(headings_1, headings_2, description, reader.line_num)
             row = next(reader)
+            new_head.serial_num = row[4]
             while len(row) != 0:
                 #new_head.add_row(row)
                 row = next(reader)

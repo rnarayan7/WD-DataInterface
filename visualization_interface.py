@@ -1,5 +1,3 @@
-import pandas as pd
-import matplotlib as plt
 import wx
 import os
 from reader import ReadInitialCSVFile
@@ -17,19 +15,22 @@ class MainWindow(wx.Frame):
         self.currentID = None
         #self.currentFilePath
         #self.listBox
+        #self.plt
+        #self.figure
 
     # Initialize the UI
     def InitUI(self):
         panel = wx.Panel(self)
         mainBox = wx.BoxSizer(wx.HORIZONTAL)
         leftBox = wx.BoxSizer(wx.VERTICAL)
+        middleBox = wx.BoxSizer(wx.VERTICAL)
         # Initialize panels
-        bottomPanel = wx.Panel(parent = panel, style = wx.DOUBLE_BORDER)
+        middlePanel = wx.Panel(parent = panel, style = wx.DOUBLE_BORDER)
         rightPanel = wx.Panel(parent = panel, style = wx.DOUBLE_BORDER)
         leftPanel = wx.Panel(parent = panel, style = wx.DOUBLE_BORDER)
         # Add components to Main Window BoxSizer
         mainBox.Add(leftPanel, proportion = 1, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.LEFT, border = 10)
-        mainBox.Add(bottomPanel, proportion = 3, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.LEFT | wx.RIGHT, border = 5)
+        mainBox.Add(middlePanel, proportion = 3, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.LEFT | wx.RIGHT, border = 5)
         mainBox.Add(rightPanel, proportion = 1, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.RIGHT, border = 10)
         panel.SetSizer(mainBox)
         # Create FileDialog button
@@ -42,7 +43,13 @@ class MainWindow(wx.Frame):
         leftBox.Add(openFileDlgBtn, proportion = 0, flag = wx.ALIGN_CENTER | wx.TOP, border = 10)
         leftBox.Add(self.listBox, proportion = 1, flag = wx.EXPAND | wx.ALIGN_LEFT | wx.TOP, border = 10)
         leftPanel.SetSizer(leftBox)
-
+        # Add Matplot to middle panel
+        self.figure = Figure()
+        self.plt = self.figure.add_subplot(111)
+        canvas = FigureCanvas(middlePanel, -1, self.figure)
+        middleBox.Add(canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
+        middlePanel.SetSizer(middleBox)
+    
     # Event handler for FileDialog button
     def onOpenFile(self, event):
         # Creates file dialog window
@@ -64,7 +71,9 @@ class MainWindow(wx.Frame):
         
     # Event handler for when HEAD is selected from ListBox
     def onSelectHEAD(self, event):
-        self.ReadInHEAD(int(self.listBox.GetString(self.listBox.GetSelection())))
+        index = self.listBox.GetString(self.listBox.GetSelection()).split(":")[0]
+        self.ReadInHEAD(int(index))
+        self.PlotGraph()
 
     # Checks if file is valid and calls necessary read function
     def ReadInData(self, filePath):
@@ -73,7 +82,9 @@ class MainWindow(wx.Frame):
             self.currentFilePath = filePath
             keys = self.master.keys()
             keys.sort()
-            self.listBox.InsertItems(map(str,keys),0)
+            items = map(str,keys)
+            items = [key + ": " + self.master[int(key)].serial_num for key in items]
+            self.listBox.InsertItems(items,0)
         else:
             raise ValueError("wrong file type selected")
     
