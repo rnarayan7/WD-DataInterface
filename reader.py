@@ -4,9 +4,10 @@ import csv
 
 class HEAD(object):
     def __init__(self, headings_1, headings_2, description, line_num):
-        self.head_description = pd.DataFrame(data = [description], columns = headings_1)
+        self.description = description
+        self.description_headings = headings_1
         self.data_headings = headings_2
-        self.id = int(self.head_description["Head Stack S/N"][0])
+        self.id = int(self.description[6])
         self.serial_num = ""
         self.line_num = line_num
         self.data = None

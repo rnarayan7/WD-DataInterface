@@ -22,6 +22,8 @@ class MainWindow(wx.Frame):
         #self.listBox
         #self.plt
         #self.figure
+        #self.middlePanel
+        #self.graphInfo
 
     # Initialize the UI
     def InitUI(self):
@@ -48,10 +50,23 @@ class MainWindow(wx.Frame):
         leftBox.Add(openFileDlgBtn, proportion = 0, flag = wx.ALIGN_CENTER | wx.TOP, border = 10)
         leftBox.Add(self.listBox, proportion = 1, flag = wx.EXPAND | wx.ALIGN_LEFT | wx.TOP, border = 10)
         leftPanel.SetSizer(leftBox)
-        # Add panels to Middle Window
+        # Add graph to Middle Window
         figure = Figure()
         self.canvas = FigureCanvas(self.middlePanel, -1, figure)
-        middleBox.Add(self.canvas, proportion = 1, flag = wx.EXPAND)
+        middleBox.Add(self.canvas, proportion = 7, flag = wx.EXPAND)
+        # Add graph info panel to Middle Window
+        # Add text portion of graph info panel
+        graphInfoPanel = wx.Panel(parent = self.middlePanel)
+        graphInfoBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.graphInfo = wx.TextCtrl(parent = graphInfoPanel, value = "", style = wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_LEFT)
+        graphInfoBox.Add(self.graphInfo, proportion = 1, flag = wx.EXPAND | wx.ALIGN_LEFT | wx.RIGHT, border = 5)
+        graphInfoPanel.SetSizer(graphInfoBox)
+        # Add button portion of graph info panel
+        
+        middleBox.Add(graphInfoPanel, proportion = 2, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        # Add save picture button
+        #savePictureBtn = wx.Button(parent = self.middlePanel, label = "Save picture of graph")
+        #savePictureBtn.Bind(wx.EVT_BUTTON, self.onSavePicture)
         self.middlePanel.SetSizer(middleBox)
     
     # Event handler for FileDialog button
@@ -78,6 +93,7 @@ class MainWindow(wx.Frame):
         index = self.listBox.GetString(self.listBox.GetSelection()).split(":")[0]
         self.ReadInHEAD(int(index))
         self.PlotGraph()
+        self.UpdateGraphInfo()
 
     # Checks if file is valid and calls necessary read function
     def ReadInData(self, filePath):
@@ -107,7 +123,7 @@ class MainWindow(wx.Frame):
         if(currentData is None):
             raise ValueError("data frame empty")
             return
-        figure = Figure(figsize = (8.5,7))
+        figure = Figure(figsize = (8.5,6))
         plt = figure.add_axes([0.1,0.1,0.8,0.8])
         plt.plot(currentData["TS_TFCSetup_TD_TFC_Power (mW)"], currentData["TS_TFCSetup_AE_Sensor_DEV"],'b')
         plt.plot(currentData["TS_TFCSetup_TD_TFC_Power (mW)"], currentData["TS_TFCSetup_AE_Sensor_NMC"],'r')
@@ -117,6 +133,17 @@ class MainWindow(wx.Frame):
         plt.set_xlabel("TFC Power (mW)")
         plt.set_title(self.master[self.currentID].serial_num)
         self.canvas = FigureCanvas(self.middlePanel, -1, figure)
+    
+    # Updates the information below the display of the graph
+    def UpdateGraphInfo(self):
+        description = self.master[self.currentID].description
+        headings = self.master[self.currentID].description_headings
+        info = ""
+        num = 0
+        while num < len(description):
+            info = info + headings[num] + ": " + description[num] + "\n"
+            num = num + 1
+        self.graphInfo.SetValue(info)
 
 # Initialize main
 if __name__ == '__main__':
