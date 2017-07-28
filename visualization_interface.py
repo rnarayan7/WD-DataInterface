@@ -109,9 +109,10 @@ class MainWindow(wx.Frame):
             return
         figure = Figure(figsize = (8.5,7))
         plt = figure.add_axes([0.1,0.1,0.8,0.8])
-        plt.plot(currentData["TS_TFCSetup_AE_Sensor_DEV"],'b')
-        plt.plot(currentData["TS_TFCSetup_AE_Sensor_NMC"],'r')
-        plt.plot(currentData["TS_TFCSetup_AE_Sensor_RMS"],'k')
+        plt.plot(currentData["TS_TFCSetup_TD_TFC_Power (mW)"], currentData["TS_TFCSetup_AE_Sensor_DEV"],'b')
+        plt.plot(currentData["TS_TFCSetup_TD_TFC_Power (mW)"], currentData["TS_TFCSetup_AE_Sensor_NMC"],'r')
+        plt.plot(currentData["TS_TFCSetup_TD_TFC_Power (mW)"], currentData["TS_TFCSetup_AE_Sensor_RMS"],'k')
+        plt.set_ylim((0,2))
         plt.legend()
         plt.set_xlabel("TFC Power (mW)")
         plt.set_title(self.master[self.currentID].serial_num)
