@@ -1,10 +1,12 @@
 import wx
 import os
+import shutil
 
 from reader import ReadInitialCSVFile
 from reader import ReadInHEADData
 
 import matplotlib
+import matplotlib.pyplot
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
@@ -21,7 +23,7 @@ class MainWindow(wx.Frame):
         #self.currentFilePath
         #self.listBox
         #self.plt
-        #self.figure
+        #figure
         #self.middlePanel
         #self.graphInfo
 
@@ -55,18 +57,28 @@ class MainWindow(wx.Frame):
         self.canvas = FigureCanvas(self.middlePanel, -1, figure)
         middleBox.Add(self.canvas, proportion = 7, flag = wx.EXPAND)
         # Add graph info panel to Middle Window
+        infoPanel = wx.Panel(parent = self.middlePanel)
+        infoBox = wx.BoxSizer(wx.HORIZONTAL)
         # Add text portion of graph info panel
-        graphInfoPanel = wx.Panel(parent = self.middlePanel)
-        graphInfoBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.graphInfo = wx.TextCtrl(parent = graphInfoPanel, value = "", style = wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_LEFT)
-        graphInfoBox.Add(self.graphInfo, proportion = 1, flag = wx.EXPAND | wx.ALIGN_LEFT | wx.RIGHT, border = 5)
-        graphInfoPanel.SetSizer(graphInfoBox)
-        # Add button portion of graph info panel
-        
-        middleBox.Add(graphInfoPanel, proportion = 2, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
-        # Add save picture button
-        #savePictureBtn = wx.Button(parent = self.middlePanel, label = "Save picture of graph")
-        #savePictureBtn.Bind(wx.EVT_BUTTON, self.onSavePicture)
+        self.graphInfo = wx.TextCtrl(parent = infoPanel, value = "", style = wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_LEFT)
+        infoBox.Add(self.graphInfo, proportion = 4, flag = wx.EXPAND | wx.ALIGN_LEFT | wx.RIGHT, border = 5)
+        infoPanel.SetSizer(infoBox)
+        # Add save picture buttons
+        savePicturePanel = wx.Panel(parent = infoPanel)
+        savePictureBox = wx.BoxSizer(wx.VERTICAL)
+        # Create button for saving one picture
+        savePictureBtn = wx.Button(parent = savePicturePanel, label = "Save picture of graph")
+        savePictureBtn.Bind(wx.EVT_BUTTON, self.onSavePicture)
+        savePictureBox.Add(savePictureBtn, proportion = 1, flag = wx.ALIGN_CENTRE)
+        # Create button for saving all pictures
+        saveAllPicturesBtn = wx.Button(parent = savePicturePanel, label = "Save all pictures")
+        saveAllPicturesBtn.Bind(wx.EVT_BUTTON, self.onSaveAllPictures)
+        savePictureBox.Add(saveAllPicturesBtn, proportion = 1, flag = wx.ALIGN_CENTRE)
+        # Add save picture panel to info panel
+        savePicturePanel.SetSizer(savePictureBox)
+        infoBox.Add(savePicturePanel, proportion = 1, flag = wx.EXPAND)
+        # Add infoPanel to middleBox
+        middleBox.Add(infoPanel, proportion = 2, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.middlePanel.SetSizer(middleBox)
     
     # Event handler for FileDialog button
@@ -91,10 +103,51 @@ class MainWindow(wx.Frame):
     # Event handler for when HEAD is selected from ListBox
     def onSelectHEAD(self, event):
         index = self.listBox.GetString(self.listBox.GetSelection()).split(":")[0]
-        self.ReadInHEAD(int(index))
+        self.currentID = int(index)
+        if(self.currentID is not None):
+            self.master[self.currentID].DeleteData()
+        self.ReadInHEAD(self.currentID)
         self.PlotGraph()
         self.UpdateGraphInfo()
-
+        
+    # Event handler for when save picture button is selected
+    def onSavePicture(self, event):
+        if self.currentFilePath is None:
+            return
+        if self.currentID is None:
+            return
+        path = os.getcwd() + "/head_images"
+        if not os.path.exists(path):
+            os.makedirs(path)
+        imgPath = path + "/" + str(self.master[self.currentID].id) + "_" + self.master[self.currentID].serial_num
+        if os.path.exists(imgPath):
+            os.remove(imgPath)
+        graph = self.master[self.currentID].PlotGraph()
+        graph.set_canvas(self.canvas)
+        graph.savefig(imgPath)
+        print "Saved " + str(self.master[self.currentID].id) + ": " + self.master[self.currentID].serial_num + " as PNG image"
+    
+    # Event handler for when save all pictures button is selected
+    def onSaveAllPictures(self, event):
+        if self.currentFilePath is None:
+            return
+        path = os.getcwd() + "/head_images"
+        if os.path.exists(path):
+            shutil.rmtree(path)
+        path = os.getcwd() + "/head_images_all/"
+        if os.path.exists(path):
+            shutil.rmtree(path)
+        os.makedirs(path)
+        for index in self.master:
+            HEAD = self.master[index]
+            imgPath = path + "/" + str(HEAD.id) + "_" + HEAD.serial_num
+            self.ReadInHEAD(HEAD.id)
+            graph = HEAD.PlotGraph()
+            graph.set_canvas(self.canvas)
+            graph.savefig(imgPath)
+            HEAD.DeleteData()
+        print "Saved images of all HEADs"
+    
     # Checks if file is valid and calls necessary read function
     def ReadInData(self, filePath):
         if(filePath[-4:] == ".csv"):
@@ -110,29 +163,13 @@ class MainWindow(wx.Frame):
     
     # Reads in HEAD data based on selection by user
     def ReadInHEAD(self, id):
-        if(self.currentID is not None):
-            self.master[self.currentID].DeleteData()
-        self.currentID = id
-        lineNum = self.master[self.currentID].line_num
-        headings = self.master[self.currentID].data_headings
-        self.master[self.currentID].data = ReadInHEADData(self.currentFilePath, headings, lineNum)
+        lineNum = self.master[id].line_num
+        headings = self.master[id].data_headings
+        self.master[id].data = ReadInHEADData(self.currentFilePath, headings, lineNum)
     
     # Plots graph based on selected id
     def PlotGraph(self):
-        currentData = self.master[self.currentID].data
-        if(currentData is None):
-            raise ValueError("data frame empty")
-            return
-        figure = Figure(figsize = (8.5,6))
-        plt = figure.add_axes([0.1,0.1,0.8,0.8])
-        plt.plot(currentData["TS_TFCSetup_TD_TFC_Power (mW)"], currentData["TS_TFCSetup_AE_Sensor_DEV"],'b')
-        plt.plot(currentData["TS_TFCSetup_TD_TFC_Power (mW)"], currentData["TS_TFCSetup_AE_Sensor_NMC"],'r')
-        plt.plot(currentData["TS_TFCSetup_TD_TFC_Power (mW)"], currentData["TS_TFCSetup_AE_Sensor_RMS"],'k')
-        plt.set_ylim((0,2))
-        plt.legend()
-        plt.set_xlabel("TFC Power (mW)")
-        plt.set_title(self.master[self.currentID].serial_num)
-        self.canvas = FigureCanvas(self.middlePanel, -1, figure)
+        self.canvas = FigureCanvas(self.middlePanel, -1, self.master[self.currentID].PlotGraph())
     
     # Updates the information below the display of the graph
     def UpdateGraphInfo(self):
