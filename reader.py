@@ -18,12 +18,13 @@ class HEAD(object):
         if(self.data is None):
             raise ValueError("data frame empty")
             return
-        figure = Figure(figsize = (8.5,6))
+        figure = Figure(figsize = (8.25,6))
         plt = figure.add_axes([0.1,0.1,0.8,0.8])
         plt.plot(self.data["TS_TFCSetup_TD_TFC_Power (mW)"], self.data["TS_TFCSetup_AE_Sensor_DEV"],'b')
         plt.plot(self.data["TS_TFCSetup_TD_TFC_Power (mW)"], self.data["TS_TFCSetup_AE_Sensor_NMC"],'r')
         plt.plot(self.data["TS_TFCSetup_TD_TFC_Power (mW)"], self.data["TS_TFCSetup_AE_Sensor_RMS"],'k')
         plt.set_ylim((0,2))
+        plt.set_xlim((0,170))
         plt.legend()
         plt.set_xlabel("TFC Power (mW)")
         plt.set_title(self.serial_num)

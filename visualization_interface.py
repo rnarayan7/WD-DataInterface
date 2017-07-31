@@ -26,22 +26,27 @@ class MainWindow(wx.Frame):
         #figure
         #self.middlePanel
         #self.graphInfo
+        #self.rightPanel
+        #self.textEntryDEV
+        #self.textEntryRMS
 
     # Initialize the UI
     def InitUI(self):
         panel = wx.Panel(self)
         mainBox = wx.BoxSizer(wx.HORIZONTAL)
-        leftBox = wx.BoxSizer(wx.VERTICAL)
         middleBox = wx.BoxSizer(wx.VERTICAL)
         # Initialize panels
         self.middlePanel = wx.Panel(parent = panel, style = wx.DOUBLE_BORDER)
-        rightPanel = wx.Panel(parent = panel, style = wx.DOUBLE_BORDER)
+        self.rightPanel = wx.Panel(parent = panel, style = wx.DOUBLE_BORDER)
         leftPanel = wx.Panel(parent = panel, style = wx.DOUBLE_BORDER)
         # Add components to Main Window BoxSizer
         mainBox.Add(leftPanel, proportion = 1, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.LEFT, border = 10)
-        mainBox.Add(self.middlePanel, proportion = 3, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.LEFT | wx.RIGHT, border = 5)
-        mainBox.Add(rightPanel, proportion = 1, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.RIGHT, border = 10)
+        mainBox.Add(self.middlePanel, proportion = 6, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.LEFT | wx.RIGHT, border = 5)
+        mainBox.Add(self.rightPanel, proportion = 5, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.RIGHT, border = 10)
         panel.SetSizer(mainBox)
+        
+        # Create UI of left Panel
+        leftBox = wx.BoxSizer(wx.VERTICAL)
         # Create FileDialog button
         openFileDlgBtn = wx.Button(parent = leftPanel, label = "Select a data file")
         openFileDlgBtn.Bind(wx.EVT_BUTTON, self.onOpenFile)
@@ -52,16 +57,18 @@ class MainWindow(wx.Frame):
         leftBox.Add(openFileDlgBtn, proportion = 0, flag = wx.ALIGN_CENTER | wx.TOP, border = 10)
         leftBox.Add(self.listBox, proportion = 1, flag = wx.EXPAND | wx.ALIGN_LEFT | wx.TOP, border = 10)
         leftPanel.SetSizer(leftBox)
+        
         # Add graph to Middle Window
         figure = Figure()
         self.canvas = FigureCanvas(self.middlePanel, -1, figure)
-        middleBox.Add(self.canvas, proportion = 7, flag = wx.EXPAND)
+        middleBox.Add(self.canvas, proportion = 7, flag = wx.EXPAND | wx. ALIGN_CENTRE)
+        
         # Add graph info panel to Middle Window
         infoPanel = wx.Panel(parent = self.middlePanel)
         infoBox = wx.BoxSizer(wx.HORIZONTAL)
         # Add text portion of graph info panel
         self.graphInfo = wx.TextCtrl(parent = infoPanel, value = "", style = wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_LEFT)
-        infoBox.Add(self.graphInfo, proportion = 4, flag = wx.EXPAND | wx.ALIGN_LEFT | wx.RIGHT, border = 5)
+        infoBox.Add(self.graphInfo, proportion = 9, flag = wx.EXPAND | wx.ALIGN_LEFT | wx.RIGHT, border = 5)
         infoPanel.SetSizer(infoBox)
         # Add save picture buttons
         savePicturePanel = wx.Panel(parent = infoPanel)
@@ -69,18 +76,57 @@ class MainWindow(wx.Frame):
         # Create button for saving one picture
         savePictureBtn = wx.Button(parent = savePicturePanel, label = "Save picture of graph")
         savePictureBtn.Bind(wx.EVT_BUTTON, self.onSavePicture)
-        savePictureBox.Add(savePictureBtn, proportion = 1, flag = wx.ALIGN_CENTRE)
+        savePictureBox.AddStretchSpacer(1);
+        savePictureBox.Add(savePictureBtn, proportion = 2, flag = wx.EXPAND | wx.ALIGN_CENTRE)
+        savePictureBox.AddStretchSpacer(1);
         # Create button for saving all pictures
         saveAllPicturesBtn = wx.Button(parent = savePicturePanel, label = "Save all pictures")
         saveAllPicturesBtn.Bind(wx.EVT_BUTTON, self.onSaveAllPictures)
-        savePictureBox.Add(saveAllPicturesBtn, proportion = 1, flag = wx.ALIGN_CENTRE)
+        savePictureBox.Add(saveAllPicturesBtn, proportion = 2, flag = wx.EXPAND | wx.ALIGN_CENTRE)
+        savePictureBox.AddStretchSpacer(10);
         # Add save picture panel to info panel
         savePicturePanel.SetSizer(savePictureBox)
-        infoBox.Add(savePicturePanel, proportion = 1, flag = wx.EXPAND)
+        infoBox.Add(savePicturePanel, proportion = 2, flag = wx.EXPAND)
         # Add infoPanel to middleBox
         middleBox.Add(infoPanel, proportion = 2, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.middlePanel.SetSizer(middleBox)
-    
+        
+        # Add limit settings to right graph
+        rightBox = wx.BoxSizer(wx.VERTICAL)
+        # Add DEV limits
+        panelDEV = wx.Panel(parent = self.rightPanel)
+        sizerDEV = wx.BoxSizer(wx.HORIZONTAL)
+        textDEV = wx.StaticText(parent = panelDEV, label = "Input limit for DEV value: ")
+        self.textEntryDEV = wx.TextCtrl(parent = panelDEV)
+        sizerDEV.Add(textDEV, proportion = 2)
+        sizerDEV.Add(self.textEntryDEV, proportion = 4)
+        panelDEV.SetSizer(sizerDEV)
+        # Add RMS limits
+        panelRMS = wx.Panel(parent = self.rightPanel)
+        sizerRMS = wx.BoxSizer(wx.HORIZONTAL)
+        textRMS = wx.StaticText(parent = panelRMS, label = "Input limit for RMS value: ")
+        self.textEntryRMS = wx.TextCtrl(parent = panelRMS)
+        sizerRMS.Add(textRMS, proportion = 2)
+        sizerRMS.Add(self.textEntryRMS, proportion = 4)
+        panelRMS.SetSizer(sizerRMS)
+        # Add button for generating graphs based on limits
+        generateLimitGraphsBtn = wx.Button(parent = self.rightPanel, label = "Generate graphs for selected limits")
+        generateLimitGraphsBtn.Bind(wx.EVT_BUTTON, self.onGenerateLimitGraphs)
+        warningInfo = wx.StaticText(parent = self.rightPanel, label = "Note: this is a time-intensive operation, so use only when necessary")
+        font = wx.Font(12, family = wx.DECORATIVE, style = wx.ITALIC, weight = wx.NORMAL)
+        warningInfo.SetFont(font)
+        # Add panels to rightBox 
+        rightBox.AddStretchSpacer(1) #TEMPORARY
+        rightBox.Add(panelDEV, proportion = 3, flag = wx.EXPAND)
+        rightBox.AddStretchSpacer(1) #TEMPORARY
+        rightBox.Add(panelRMS, proportion = 3, flag = wx.EXPAND)
+        rightBox.AddStretchSpacer(1) #TEMPORARY
+        rightBox.Add(generateLimitGraphsBtn, proportion = 2, flag = wx.ALIGN_RIGHT)
+        rightBox.AddStretchSpacer(1) #TEMPORARY
+        rightBox.Add(warningInfo, proportion = 2, flag = wx.ALIGN_RIGHT)
+        rightBox.AddStretchSpacer(90) #TEMPORARY
+        self.rightPanel.SetSizer(rightBox)
+        
     # Event handler for FileDialog button
     def onOpenFile(self, event):
         # Creates file dialog window
@@ -147,6 +193,10 @@ class MainWindow(wx.Frame):
             graph.savefig(imgPath)
             HEAD.DeleteData()
         print "Saved images of all HEADs"
+    
+    # Event handler for when generate limit graphs button is selected
+    def onGenerateLimitGraphs(self, event):
+        print "Do nothing so far"
     
     # Checks if file is valid and calls necessary read function
     def ReadInData(self, filePath):
