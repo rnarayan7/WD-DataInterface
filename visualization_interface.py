@@ -2,7 +2,9 @@ import wx
 import os
 import shutil
 
+from summary import Summary
 from reader import ReadInitialCSVFile
+from reader import ReadCSVWithLimit
 from reader import ReadInHEADData
 
 import matplotlib
@@ -116,13 +118,13 @@ class MainWindow(wx.Frame):
         font = wx.Font(12, family = wx.DECORATIVE, style = wx.ITALIC, weight = wx.NORMAL)
         warningInfo.SetFont(font)
         # Add panels to rightBox 
-        rightBox.AddStretchSpacer(1) #TEMPORARY
+        rightBox.AddStretchSpacer(1)
         rightBox.Add(panelDEV, proportion = 3, flag = wx.EXPAND)
-        rightBox.AddStretchSpacer(1) #TEMPORARY
+        rightBox.AddStretchSpacer(1)
         rightBox.Add(panelRMS, proportion = 3, flag = wx.EXPAND)
-        rightBox.AddStretchSpacer(1) #TEMPORARY
+        rightBox.AddStretchSpacer(1)
         rightBox.Add(generateLimitGraphsBtn, proportion = 2, flag = wx.ALIGN_RIGHT)
-        rightBox.AddStretchSpacer(1) #TEMPORARY
+        rightBox.AddStretchSpacer(1)
         rightBox.Add(warningInfo, proportion = 2, flag = wx.ALIGN_RIGHT)
         rightBox.AddStretchSpacer(90) #TEMPORARY
         self.rightPanel.SetSizer(rightBox)
@@ -196,7 +198,16 @@ class MainWindow(wx.Frame):
     
     # Event handler for when generate limit graphs button is selected
     def onGenerateLimitGraphs(self, event):
-        print "Do nothing so far"
+        if self.currentFilePath is None:
+            return
+        try:
+            dev_limit = float(self.textEntryDEV.GetLineText(0))
+            rms_limit = float(self.textEntryRMS.GetLineText(0))
+        except ValueError:
+            #TODO create ALERT
+            return
+        results = ReadCSVWithLimit(self.currentFilePath, dev_limit, rms_limit)
+        self.summary = Summary(numHEADs = len(self.master), dev = results[0], rms = results[1])
     
     # Checks if file is valid and calls necessary read function
     def ReadInData(self, filePath):

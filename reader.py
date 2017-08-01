@@ -58,6 +58,51 @@ def ReadInitialCSVFile(file_path):
             master[new_head.id] = new_head
     return master
 
+def ReadCSVWithLimit(file_path, dev_limit, rms_limit):
+    dev = dict()
+    rms = dict()
+    with open(file_path,'rb') as csvfile:
+        reader = csv.reader(csvfile)
+        row = next(reader)
+        while row[0] == ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>":
+            row = next(reader)
+            row = next(reader)
+            id = int(row[6])
+            row = next(reader)
+            row = next(reader)
+            row = next(reader)
+            dev_value = None
+            rms_value = None
+            while len(row) != 0:
+                if dev_value is None:
+                    if float(row[11]) > dev_limit: # Compares DEV value at current point
+                        dev_value = row[50] # Stores TFC Power value at point where limit is eclipsed
+                        #print "reached dev: " + row[50]
+                if rms_value is None:
+                    if float(row[17]) > rms_limit: # Compares RMS value at current point
+                        rms_value = row[50] # Stores TFC Power value at point where limit is eclipsed
+                        #print "reached rms: " + row[50]
+                #print "dev: " + str(row[11]) + " rms: " + str(row[17]) + " row[50]: " + str(row[50])
+                row = next(reader)
+            while True:
+                if len(row) == 1:
+                    if row[0] == ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>":
+                        break
+                try:
+                    row = next(reader)
+                    #break
+                except StopIteration:
+                    print "Reached end of CSV file -- Limit test: DEV = " + str(dev_limit) + " | RMS = " + str(rms_limit)
+                    break
+            dev[id] = dev_value
+            rms[id] = rms_value
+            #print "id: " + str(id)
+            #print "dev_value: " + str(dev_value)
+            #print "rms_value: " + str(rms_value)
+            #print ""
+            
+    return [dev, rms]
+
 def ReadInHEADData(file_path, headings, line_num):
     HEAD_data = pd.DataFrame(columns = headings)
     with open(file_path,'rb') as csvfile:
@@ -76,6 +121,3 @@ def ReadInHEADData(file_path, headings, line_num):
         print "Dimensions of data table:"
         print HEAD_data.shape
     return HEAD_data
-
-#if __name__ == '__main__':
-    #master = readInitialCSVFile("Data-File.csv")
