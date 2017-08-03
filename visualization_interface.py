@@ -24,13 +24,12 @@ class MainWindow(wx.Frame):
         self.currentID = None
         #self.currentFilePath
         #self.listBox
-        #self.plt
-        #figure
         #self.middlePanel
         #self.graphInfo
         #self.rightPanel
         #self.textEntryDEV
         #self.textEntryRMS
+        #self.summaryCanvas
 
     # Initialize the UI
     def InitUI(self):
@@ -114,9 +113,6 @@ class MainWindow(wx.Frame):
         # Add button for generating graphs based on limits
         generateLimitGraphsBtn = wx.Button(parent = self.rightPanel, label = "Generate graphs for selected limits")
         generateLimitGraphsBtn.Bind(wx.EVT_BUTTON, self.onGenerateLimitGraphs)
-        warningInfo = wx.StaticText(parent = self.rightPanel, label = "Note: this is a time-intensive operation, so use only when necessary")
-        font = wx.Font(12, family = wx.DECORATIVE, style = wx.ITALIC, weight = wx.NORMAL)
-        warningInfo.SetFont(font)
         # Add panels to rightBox 
         rightBox.AddStretchSpacer(1)
         rightBox.Add(panelDEV, proportion = 3, flag = wx.EXPAND)
@@ -125,8 +121,15 @@ class MainWindow(wx.Frame):
         rightBox.AddStretchSpacer(1)
         rightBox.Add(generateLimitGraphsBtn, proportion = 2, flag = wx.ALIGN_RIGHT)
         rightBox.AddStretchSpacer(1)
-        rightBox.Add(warningInfo, proportion = 2, flag = wx.ALIGN_RIGHT)
-        rightBox.AddStretchSpacer(90) #TEMPORARY
+        # Add individual summary graphs
+        self.summaryPanel = wx.Panel(parent = self.rightPanel)
+        summaryBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.summaryCanvas = FigureCanvas(self.summaryPanel, 1, Figure())
+        summaryBox.Add(self.summaryCanvas, proportion = 1, flag = wx.EXPAND | wx. ALIGN_CENTRE | wx.ALL)
+        self.summaryPanel.SetSizer(summaryBox)
+        rightBox.Add(self.summaryPanel, proportion = 90, flag = wx.EXPAND | wx. ALIGN_CENTRE | wx.ALL)
+        # Add spacing at end
+        rightBox.AddStretchSpacer(1)
         self.rightPanel.SetSizer(rightBox)
         
     # Event handler for FileDialog button
@@ -208,7 +211,8 @@ class MainWindow(wx.Frame):
             return
         results = ReadCSVWithLimit(self.currentFilePath, dev_limit, rms_limit)
         self.summary = Summary(numHEADs = len(self.master), dev = results[0], rms = results[1])
-    
+        self.summaryCanvas = FigureCanvas(self.summaryPanel, 1, self.summary.PlotSummaryGraphs())
+        
     # Checks if file is valid and calls necessary read function
     def ReadInData(self, filePath):
         if(filePath[-4:] == ".csv"):
@@ -230,7 +234,7 @@ class MainWindow(wx.Frame):
     
     # Plots graph based on selected id
     def PlotGraph(self):
-        self.canvas = FigureCanvas(self.middlePanel, -1, self.master[self.currentID].PlotGraph())
+        self.canvas = FigureCanvas(self.middlePanel, 1, self.master[self.currentID].PlotGraph())
     
     # Updates the information below the display of the graph
     def UpdateGraphInfo(self):

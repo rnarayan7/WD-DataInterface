@@ -20,9 +20,9 @@ class HEAD(object):
             return
         figure = Figure(figsize = (8.25,6))
         plt = figure.add_axes([0.1,0.1,0.8,0.8])
-        plt.plot(self.data["TS_TFCSetup_TD_TFC_Power (mW)"], self.data["TS_TFCSetup_AE_Sensor_DEV"],'b')
-        plt.plot(self.data["TS_TFCSetup_TD_TFC_Power (mW)"], self.data["TS_TFCSetup_AE_Sensor_NMC"],'r')
-        plt.plot(self.data["TS_TFCSetup_TD_TFC_Power (mW)"], self.data["TS_TFCSetup_AE_Sensor_RMS"],'k')
+        plt.plot(self.data["TS_TFCSetup_TD_TFC_Power (mW)"], self.data["TS_TFCSetup_AE_Sensor_DEV"],'blue')
+        plt.plot(self.data["TS_TFCSetup_TD_TFC_Power (mW)"], self.data["TS_TFCSetup_AE_Sensor_NMC"],'purple')
+        plt.plot(self.data["TS_TFCSetup_TD_TFC_Power (mW)"], self.data["TS_TFCSetup_AE_Sensor_RMS"],'red')
         plt.set_ylim((0,2))
         plt.set_xlim((0,170))
         plt.legend()
@@ -96,11 +96,11 @@ def ReadCSVWithLimit(file_path, dev_limit, rms_limit):
                     break
             dev[id] = dev_value
             rms[id] = rms_value
-            #print "id: " + str(id)
-            #print "dev_value: " + str(dev_value)
-            #print "rms_value: " + str(rms_value)
-            #print ""
-            
+            print "id: " + str(id)
+            print "dev_value: " + str(dev_value)
+            print "rms_value: " + str(rms_value)
+            print ""
+    
     return [dev, rms]
 
 def ReadInHEADData(file_path, headings, line_num):
