@@ -253,5 +253,5 @@ if __name__ == '__main__':
     MainWindow(parent = None,
             style = wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.RESIZE_BORDER |
                     wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX,
-            title = 'Western Digital HEAD Data Processing')
+            title = 'WD HEAD Data Processing')
     app.MainLoop()
