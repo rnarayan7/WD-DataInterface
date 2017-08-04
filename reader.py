@@ -77,12 +77,9 @@ def ReadCSVWithLimit(file_path, dev_limit, rms_limit):
                 if dev_value is None:
                     if float(row[11]) > dev_limit: # Compares DEV value at current point
                         dev_value = row[50] # Stores TFC Power value at point where limit is eclipsed
-                        #print "reached dev: " + row[50]
                 if rms_value is None:
                     if float(row[17]) > rms_limit: # Compares RMS value at current point
                         rms_value = row[50] # Stores TFC Power value at point where limit is eclipsed
-                        #print "reached rms: " + row[50]
-                #print "dev: " + str(row[11]) + " rms: " + str(row[17]) + " row[50]: " + str(row[50])
                 row = next(reader)
             while True:
                 if len(row) == 1:
@@ -90,17 +87,11 @@ def ReadCSVWithLimit(file_path, dev_limit, rms_limit):
                         break
                 try:
                     row = next(reader)
-                    #break
                 except StopIteration:
                     print "Reached end of CSV file -- Limit test: DEV = " + str(dev_limit) + " | RMS = " + str(rms_limit)
                     break
             dev[id] = dev_value
             rms[id] = rms_value
-            print "id: " + str(id)
-            print "dev_value: " + str(dev_value)
-            print "rms_value: " + str(rms_value)
-            print ""
-    
     return [dev, rms]
 
 def ReadInHEADData(file_path, headings, line_num):

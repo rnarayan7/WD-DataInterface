@@ -16,10 +16,6 @@ class Summary(object):
                 self.min[index] = self.dev[index]
             else:
                 self.min[index] = min(self.dev[index],self.rms[index])
-        #for index in self.dev:
-            #print "dev: " + str(self.rms[index])
-        #for index in self.rms:
-            #print "rms: " + str(self.rms[index])
     
     def PlotSummaryGraphs(self):
         # Create full plot
