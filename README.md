@@ -11,3 +11,6 @@ Design:
   - GUI built using WXPython package
   - Uses Matplotlib for creation of graphs
   - Uses CSV parser and reader for accessing data
+
+Image of program in use:
+![alt text](screenshot_program.png)
