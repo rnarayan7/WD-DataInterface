@@ -8,7 +8,6 @@ from reader import ReadCSVWithLimit
 from reader import ReadInHEADData
 
 import matplotlib
-import matplotlib.pyplot
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
@@ -215,7 +214,7 @@ class MainWindow(wx.Frame):
         
     # Checks if file is valid and calls necessary read function
     def ReadInData(self, filePath):
-        if(filePath[-4:] == ".csv"):
+        if(filePath[-4:] == ".csv" or filePath[-4:] == ".CSV"):
             self.master = ReadInitialCSVFile(filePath)
             self.currentFilePath = filePath
             keys = self.master.keys()
@@ -238,8 +237,8 @@ class MainWindow(wx.Frame):
     
     # Updates the information below the display of the graph
     def UpdateGraphInfo(self):
-        description = self.master[self.currentID].description
-        headings = self.master[self.currentID].description_headings
+        description = self.master[self.currentID].info
+        headings = self.master[self.currentID].info_headings
         info = ""
         num = 0
         while num < len(description):

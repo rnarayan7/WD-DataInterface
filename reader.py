@@ -1,15 +1,14 @@
 import pandas as pd
-import matplotlib
 from matplotlib.figure import Figure
 import csv
 
 class HEAD(object):
-    def __init__(self, headings_1, headings_2, description, line_num):
-        self.description = description
-        self.description_headings = headings_1
-        self.data_headings = headings_2
-        self.id = int(self.description[6])
-        self.serial_num = ""
+    def __init__(self, info_headings, info, data_headings, data_line1, line_num):
+        self.info_headings = info_headings
+        self.info = info
+        self.data_headings = data_headings
+        self.serial_num = self.info[self.info_headings.index("Disk Pack S/N")]
+        self.id = int(data_line1[self.data_headings.index("Head #")])
         self.line_num = line_num
         self.data = None
     def DeleteData(self):
@@ -36,15 +35,13 @@ def ReadInitialCSVFile(file_path):
         reader = csv.reader(csvfile)
         row = next(reader)
         while row[0] == ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>":
-            headings_1 = next(reader)
-            description = next(reader)
+            info_headings = next(reader)
+            info = next(reader)
             row = next(reader)
-            headings_2 = next(reader)
-            new_head = HEAD(headings_1, headings_2, description, reader.line_num)
-            row = next(reader)
-            new_head.serial_num = row[4]
+            data_headings = next(reader)
+            data_line1 = next(reader)
+            new_head = HEAD(info_headings, info, data_headings, data_line1, reader.line_num)
             while len(row) != 0:
-                #new_head.add_row(row)
                 row = next(reader)
             while True:
                 if len(row) == 1:

@@ -1,7 +1,5 @@
-import matplotlib
 import numpy as np
 from matplotlib.figure import Figure
-from matplotlib.axes import Axes
 
 class Summary(object):
     def __init__(self, numHEADs, dev, rms):
