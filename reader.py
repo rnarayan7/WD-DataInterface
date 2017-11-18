@@ -3,12 +3,12 @@ from matplotlib.figure import Figure
 import csv
 
 class HEAD(object):
-    def __init__(self, info_headings, info, data_headings, data_line1, line_num):
+    def __init__(self, info_headings, info, data_headings, serial_num, id, line_num):
         self.info_headings = info_headings
         self.info = info
         self.data_headings = data_headings
-        self.serial_num = self.info[self.info_headings.index("Disk Pack S/N")]
-        self.id = int(data_line1[self.data_headings.index("Head #")])
+        self.serial_num = serial_num
+        self.id = id
         self.line_num = line_num
         self.data = None
     def DeleteData(self):
@@ -29,7 +29,7 @@ class HEAD(object):
         plt.set_title(self.serial_num)
         return figure
 
-def ReadInitialCSVFile(file_path):
+def ReadUSInitialCSVFile(file_path):
     master = dict()
     with open(file_path,'rb') as csvfile:
         reader = csv.reader(csvfile)
@@ -39,9 +39,14 @@ def ReadInitialCSVFile(file_path):
             info = next(reader)
             row = next(reader)
             data_headings = next(reader)
-            data_line1 = next(reader)
-            new_head = HEAD(info_headings, info, data_headings, data_line1, reader.line_num)
+            row = next(reader)
+            serial_num = row[data_headings.index("Head S/N")]
+            id = int(info[info_headings.index("Head Stack S/N")])
+            new_head = HEAD(info_headings, info, data_headings, serial_num, id, reader.line_num)
+            sn_index = data_headings.index("Head S/N")
             while len(row) != 0:
+                if row[sn_index] != serial_num:
+                    raise ValueError("Input file does not follow format used in US factories")
                 row = next(reader)
             while True:
                 if len(row) == 1:
@@ -53,6 +58,36 @@ def ReadInitialCSVFile(file_path):
                     print "Reached end of CSV file"
                     break
             master[new_head.id] = new_head
+    return master
+
+def ReadThailandInitialCSVFile(file_path):
+    master = dict()
+    with open(file_path,'rb') as csvfile:
+        reader = csv.reader(csvfile)
+        row = next(reader)
+        info_headings = next(reader)
+        info = next(reader)
+        row = next(reader)
+        data_headings = next(reader)
+        data_line1 = next(reader)
+        sn_index = data_headings.index("Head S/N")
+        id = 0
+        while len(data_line1) != 0:
+            print len(data_line1)
+            serial_num = data_line1[sn_index]
+            print serial_num
+            new_head = HEAD(info_headings, info, data_headings, serial_num, id, reader.line_num)
+            new_head.id = id
+            master[new_head.id] = new_head
+            id += 1
+            row = data_line1
+            while len(row) != 0 and row[sn_index] == serial_num:
+                try:
+                    row = next(reader)
+                except StopIteration:
+                    print "Reached end of CSV file"
+                    return master
+            data_line1 = row
     return master
 
 def ReadCSVWithLimit(file_path, dev_limit, rms_limit):
@@ -102,7 +137,9 @@ def ReadInHEADData(file_path, headings, line_num):
                 print "ERROR: could not find line"
                 break
         row = next(reader)
-        while len(row) != 0:
+        sn_index = headings.index("Head S/N")
+        serial_num = row[sn_index]
+        while len(row) != 0 and row[sn_index] == serial_num:
             HEAD_data = HEAD_data.append(pd.DataFrame([row],columns = headings),
                                              ignore_index = True)
             row = next(reader)

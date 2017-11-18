@@ -3,11 +3,11 @@ import os
 import shutil
 
 from summary import Summary
-from reader import ReadInitialCSVFile
+from reader import ReadUSInitialCSVFile
+from reader import ReadThailandInitialCSVFile
 from reader import ReadCSVWithLimit
 from reader import ReadInHEADData
 
-import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
@@ -44,7 +44,7 @@ class MainWindow(wx.Frame):
         mainBox.Add(self.middlePanel, proportion = 6, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.LEFT | wx.RIGHT, border = 5)
         mainBox.Add(self.rightPanel, proportion = 5, flag = wx.EXPAND | wx.ALIGN_CENTER | wx.RIGHT, border = 10)
         panel.SetSizer(mainBox)
-        
+
         # Create UI of left Panel
         leftBox = wx.BoxSizer(wx.VERTICAL)
         # Create FileDialog button
@@ -57,12 +57,12 @@ class MainWindow(wx.Frame):
         leftBox.Add(openFileDlgBtn, proportion = 0, flag = wx.ALIGN_CENTER | wx.TOP, border = 10)
         leftBox.Add(self.listBox, proportion = 1, flag = wx.EXPAND | wx.ALIGN_LEFT | wx.TOP, border = 10)
         leftPanel.SetSizer(leftBox)
-        
+
         # Add graph to Middle Window
         figure = Figure()
         self.canvas = FigureCanvas(self.middlePanel, -1, figure)
         middleBox.Add(self.canvas, proportion = 7, flag = wx.EXPAND | wx. ALIGN_CENTRE)
-        
+
         # Add graph info panel to Middle Window
         infoPanel = wx.Panel(parent = self.middlePanel)
         infoBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -90,7 +90,7 @@ class MainWindow(wx.Frame):
         # Add infoPanel to middleBox
         middleBox.Add(infoPanel, proportion = 2, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.middlePanel.SetSizer(middleBox)
-        
+
         # Add limit settings to right graph
         rightBox = wx.BoxSizer(wx.VERTICAL)
         # Add DEV limits
@@ -112,7 +112,7 @@ class MainWindow(wx.Frame):
         # Add button for generating graphs based on limits
         generateLimitGraphsBtn = wx.Button(parent = self.rightPanel, label = "Generate graphs for selected limits")
         generateLimitGraphsBtn.Bind(wx.EVT_BUTTON, self.onGenerateLimitGraphs)
-        # Add panels to rightBox 
+        # Add panels to rightBox
         rightBox.AddStretchSpacer(1)
         rightBox.Add(panelDEV, proportion = 3, flag = wx.EXPAND)
         rightBox.AddStretchSpacer(1)
@@ -130,7 +130,7 @@ class MainWindow(wx.Frame):
         # Add spacing at end
         rightBox.AddStretchSpacer(1)
         self.rightPanel.SetSizer(rightBox)
-        
+
     # Event handler for FileDialog button
     def onOpenFile(self, event):
         # Creates file dialog window
@@ -149,7 +149,7 @@ class MainWindow(wx.Frame):
                 print path
             self.ReadInData(filePath = dlg.GetPath())
         dlg.Destroy()
-        
+
     # Event handler for when HEAD is selected from ListBox
     def onSelectHEAD(self, event):
         index = self.listBox.GetString(self.listBox.GetSelection()).split(":")[0]
@@ -159,7 +159,7 @@ class MainWindow(wx.Frame):
         self.ReadInHEAD(self.currentID)
         self.PlotGraph()
         self.UpdateGraphInfo()
-        
+
     # Event handler for when save picture button is selected
     def onSavePicture(self, event):
         if self.currentFilePath is None:
@@ -176,7 +176,7 @@ class MainWindow(wx.Frame):
         graph.set_canvas(self.canvas)
         graph.savefig(imgPath)
         print "Saved " + str(self.master[self.currentID].id) + ": " + self.master[self.currentID].serial_num + " as PNG image"
-    
+
     # Event handler for when save all pictures button is selected
     def onSaveAllPictures(self, event):
         if self.currentFilePath is None:
@@ -197,7 +197,7 @@ class MainWindow(wx.Frame):
             graph.savefig(imgPath)
             HEAD.DeleteData()
         print "Saved images of all HEADs"
-    
+
     # Event handler for when generate limit graphs button is selected
     def onGenerateLimitGraphs(self, event):
         if self.currentFilePath is None:
@@ -211,11 +211,14 @@ class MainWindow(wx.Frame):
         results = ReadCSVWithLimit(self.currentFilePath, dev_limit, rms_limit)
         self.summary = Summary(numHEADs = len(self.master), dev = results[0], rms = results[1])
         self.summaryCanvas = FigureCanvas(self.summaryPanel, 1, self.summary.PlotSummaryGraphs())
-        
+
     # Checks if file is valid and calls necessary read function
     def ReadInData(self, filePath):
         if(filePath[-4:] == ".csv" or filePath[-4:] == ".CSV"):
-            self.master = ReadInitialCSVFile(filePath)
+            try:
+                self.master = ReadUSInitialCSVFile(filePath)
+            except ValueError:
+                self.master = ReadThailandInitialCSVFile(filePath)
             self.currentFilePath = filePath
             keys = self.master.keys()
             keys.sort()
@@ -224,17 +227,17 @@ class MainWindow(wx.Frame):
             self.listBox.InsertItems(items,0)
         else:
             raise ValueError("wrong file type selected")
-    
+
     # Reads in HEAD data based on selection by user
     def ReadInHEAD(self, id):
         lineNum = self.master[id].line_num
         headings = self.master[id].data_headings
         self.master[id].data = ReadInHEADData(self.currentFilePath, headings, lineNum)
-    
+
     # Plots graph based on selected id
     def PlotGraph(self):
         self.canvas = FigureCanvas(self.middlePanel, 1, self.master[self.currentID].PlotGraph())
-    
+
     # Updates the information below the display of the graph
     def UpdateGraphInfo(self):
         description = self.master[self.currentID].info
